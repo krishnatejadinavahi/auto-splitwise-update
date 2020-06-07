@@ -1,0 +1,4 @@
+gmail/authenticate/credentials.json
+gmail/authenticate/token.pickle
+.idea
+gmail/authenticate/__pycache__
