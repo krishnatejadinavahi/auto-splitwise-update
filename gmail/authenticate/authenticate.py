@@ -40,5 +40,5 @@ class GmailAuth:
             with open(token_file, 'wb') as token:
                 pickle.dump(creds, token)
 
-        api = Api()
-        api.get_emails(creds)
+        return creds
+

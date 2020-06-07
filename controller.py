@@ -1,5 +1,6 @@
 import http.server
 from gmail.authenticate.authenticate import GmailAuth
+from gmail.api.api import Api
 
 PORT = 8000
 
@@ -7,15 +8,29 @@ PORT = 8000
 class HandleGmailApiRq(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
-        GmailAuth.authenticate()
+        creds = self.get_creds()
 
-        self.send_response(200)
-        self.send_header("Content-type", "text/html")
-        self.end_headers()
+        api = Api(creds)
+        api.get_emails()
+
+        self.return_res()
 
     def do_POST(self):
+        creds = self.get_creds()
+
         content_length = int(self.headers['Content-Length'])
         body = self.rfile.read(content_length)
+        request_string = body.decode('utf-8')
+
+        api = Api(creds)
+        api.update_preferences(request_string)
+
+        self.return_res()
+
+    def get_creds(self):
+        return GmailAuth.authenticate()
+
+    def return_res(self):
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()

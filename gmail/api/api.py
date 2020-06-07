@@ -1,34 +1,30 @@
 import base64
 from googleapiclient.discovery import build
 import redis
+import json
+from gmail.api.redis_utils import RedisUtils
 
 
-class Api:
+class Api(RedisUtils):
 
-    def __init__(self):
-        self.client = redis.Redis(host='localhost', port=6379)
-        self.client.rpush('Amex', 'American Express', 'Amex')
-        self.client.lrange('Amex', 0, -1)
+    def get_emails(self):
+        preferences = self.get_preferences()
 
-    def update_preferences(self, creds):
-        service = build('gmail', 'v1', credentials=creds)
-        email_address = service.users().getProfile(userId='me').execute()['emailAddress']
+        for card in preferences['cardsToTrack']:
+            card_query = self.client.get(card)
 
-    def get_emails(self, creds):
-        service = build('gmail', 'v1', credentials=creds)
+            if card_query is not None:
+                results = self.service.users().messages().list(userId='me', q=card_query.decode('utf-8')).execute()
+                for message in results['messages']:
+                    message_content = self.service.users().messages().get(userId='me', id=message['id'], format='full').execute()
+                    email_content = ''
 
-        results = service.users().messages().list(userId='me',
-                                                  q='from:discover@service.discover.com subject:Your purchase exceeds the amount you set').execute()
+                    if 'data' in message_content['payload']['body'].keys():
+                        email_content += message_content['payload']['body']['data']
+                    else:
+                        for part in message_content['payload']['parts']:
+                            if 'data' in part['body'].keys():
+                                email_content = part['body']['data'] + email_content
 
-        message = service.users().messages().get(userId='me', id='1725846a231489fe', format='full').execute()
-
-        email_content = ''
-
-        if 'data' in message['payload']['body'].keys():
-            email_content += message['payload']['body']['data']
-        else:
-            for part in message['payload']['parts']:
-                email_content = part['body']['data'] + email_content
-
-        test = bytes(str(email_content), encoding='utf-8')
-        print(base64.urlsafe_b64decode(test))
+                    test = bytes(str(email_content), encoding='utf-8')
+                    print(base64.urlsafe_b64decode(test))
