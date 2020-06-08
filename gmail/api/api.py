@@ -1,8 +1,6 @@
 import base64
-from googleapiclient.discovery import build
-import redis
-import json
 from gmail.api.redis_utils import RedisUtils
+from bs4 import BeautifulSoup
 
 
 class Api(RedisUtils):
@@ -27,4 +25,47 @@ class Api(RedisUtils):
                                 email_content = part['body']['data'] + email_content
 
                     test = bytes(str(email_content), encoding='utf-8')
-                    print(base64.urlsafe_b64decode(test))
+                    transaction_html = base64.urlsafe_b64decode(test).decode('utf-8')
+                    parser = self.get_parser(card)
+                    parser.parse(transaction_html)
+
+
+    def get_parser(self, card):
+        if card == "Discover":
+            return Discover()
+        # if card == "Amex":
+            # return Amex()
+        # if card == "BoFA":
+            # return BoFA()
+
+
+class Discover:
+    def parse(self, transaction_html):
+        soup = BeautifulSoup(transaction_html, "html.parser")
+
+        amount_element = soup.find("td", text="Amount:")
+        transaction_dict = {}
+
+        if amount_element is not None:
+            transaction_amount = amount_element.next_sibling.next_element.strip()
+            transaction_dict["amount"] = transaction_amount
+        else:
+            return
+
+        merchant_element = soup.find("td", text="Merchant:")
+
+        if merchant_element is not None:
+            transaction_merchant = merchant_element.next_sibling.next_element.strip()
+            transaction_dict["merchant"] = transaction_merchant
+
+        date_element = soup.find("td", text="Date:")
+
+        if date_element is not None:
+            transaction_date = date_element.next_sibling.next_element.strip()
+            transaction_dict["date"] = transaction_date
+
+        print(transaction_dict)
+
+# class Amex:
+
+# class BoFA:
