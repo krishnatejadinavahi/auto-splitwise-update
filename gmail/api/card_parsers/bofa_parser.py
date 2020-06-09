@@ -26,4 +26,4 @@ class BoFA:
             transaction_date = date_element.find_parent().find_all('td')[-1].next_element.strip()
             transaction_dict["date"] = transaction_date
 
-        print(transaction_dict)
+        return transaction_dict

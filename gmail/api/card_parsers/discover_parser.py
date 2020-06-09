@@ -26,4 +26,4 @@ class Discover:
             transaction_date = date_element.next_sibling.next_element.strip()
             transaction_dict["date"] = transaction_date
 
-        print(transaction_dict)
+        return transaction_dict
