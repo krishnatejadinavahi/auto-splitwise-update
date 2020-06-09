@@ -2,18 +2,29 @@ import base64
 from gmail.api.redis_utils import RedisUtils
 from bs4 import BeautifulSoup
 import re
+from gmail.api.card_parsers.discover_parser import Discover
+from gmail.api.card_parsers.bofa_parser import BoFA
 
 
 class Api(RedisUtils):
 
     def get_emails(self):
         preferences = self.get_preferences()
+        email_address = self.service.users().getProfile(userId='me').execute()['emailAddress']
 
         for card in preferences['cardsToTrack']:
+            last_pushed_email_json = self.get_or_create_last_pushed_email_structure(card)
             card_query = self.client.get(card)
 
             if card_query is not None:
                 results = self.service.users().messages().list(userId='me', q=card_query.decode('utf-8')).execute()
+
+                if not last_pushed_email_json[card] and len(results['messages']) > 0:
+                    latest_email_id = results['messages'][0]['id']
+                    last_pushed_email_json[card] = latest_email_id
+                    self.update_last_pushed_email_structure(last_pushed_email_json)
+
+
                 for message in results['messages']:
                     message_content = self.service.users().messages().get(userId='me', id=message['id'],
                                                                           format='full').execute()
@@ -42,59 +53,4 @@ class Api(RedisUtils):
             return BoFA()
 
 
-class Discover:
-    def parse(self, transaction_html):
-        soup = BeautifulSoup(transaction_html, "html.parser")
-
-        amount_element = soup.find("td", text="Amount:")
-        transaction_dict = {}
-
-        if amount_element is not None:
-            transaction_amount = amount_element.next_sibling.next_element.strip()
-            transaction_dict["amount"] = transaction_amount
-        else:
-            return
-
-        merchant_element = soup.find("td", text="Merchant:")
-
-        if merchant_element is not None:
-            transaction_merchant = merchant_element.next_sibling.next_element.strip()
-            transaction_dict["merchant"] = transaction_merchant
-
-        date_element = soup.find("td", text="Date:")
-
-        if date_element is not None:
-            transaction_date = date_element.next_sibling.next_element.strip()
-            transaction_dict["date"] = transaction_date
-
-        print(transaction_dict)
-
-
 # class Amex:
-
-class BoFA:
-    def parse(self, transaction_html):
-        soup = BeautifulSoup(transaction_html, "html.parser")
-
-        amount_element = soup.find("td", text=" Amount: ")
-        transaction_dict = {}
-
-        if amount_element is not None:
-            transaction_amount = amount_element.find_parent().find_all('td')[-1].next_element.strip()
-            transaction_dict["amount"] = transaction_amount
-        else:
-            return
-
-        merchant_element = soup.find("td", text=" Merchant: ")
-
-        if merchant_element is not None:
-            transaction_merchant = merchant_element.find_parent().find_all('td')[-1].next_element.strip()
-            transaction_dict["merchant"] = transaction_merchant
-
-        date_element = soup.find("td", text=" Transaction date: ")
-
-        if date_element is not None:
-            transaction_date = date_element.find_parent().find_all('td')[-1].next_element.strip()
-            transaction_dict["date"] = transaction_date
-
-        print(transaction_dict)
