@@ -26,4 +26,6 @@ class Discover:
             transaction_date = date_element.next_sibling.next_element.strip()
             transaction_dict["date"] = transaction_date
 
+        transaction_dict["card"] = "Discover Card"
+
         return transaction_dict

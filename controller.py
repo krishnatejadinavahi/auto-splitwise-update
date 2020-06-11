@@ -11,7 +11,11 @@ class HandleGmailApiRq(http.server.BaseHTTPRequestHandler):
         creds = self.get_creds()
 
         api = Api(creds)
-        api.get_emails()
+        list_to_splitwise = api.get_emails()
+
+        api.post_to_splitwise(
+            [{'amount': '$8.03', 'merchant': 'Pressed Cafe LLC', 'date': 'May 27, 2020', 'card': 'Discover Card'},
+             {'amount': '$27.86', 'merchant': 'MARKET BASKET 17', 'date': 'May 25, 2020', 'card': 'Discover Card'}])
 
         self.return_res()
 

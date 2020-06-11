@@ -26,4 +26,6 @@ class BoFA:
             transaction_date = date_element.find_parent().find_all('td')[-1].next_element.strip()
             transaction_dict["date"] = transaction_date
 
+        transaction_dict["card"] = "BoFA Card"
+
         return transaction_dict

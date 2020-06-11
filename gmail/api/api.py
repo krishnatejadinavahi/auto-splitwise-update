@@ -1,9 +1,9 @@
 import base64
 from gmail.api.redis_utils import RedisUtils
-from bs4 import BeautifulSoup
 import re
 from gmail.api.card_parsers.discover_parser import Discover
 from gmail.api.card_parsers.bofa_parser import BoFA
+import requests
 
 
 class Api(RedisUtils):
@@ -52,7 +52,8 @@ class Api(RedisUtils):
                     text_without_spaces = re.sub('\s+', ' ', transaction_html)
                     transaction = parser.parse(text_without_spaces)
                     self.list_to_splitwise.append(transaction)
-                    print(self.list_to_splitwise)
+
+        return self.list_to_splitwise
 
     def get_parser(self, card):
         if card == "Discover":
@@ -61,5 +62,9 @@ class Api(RedisUtils):
         # return Amex()
         if card == "BoFA":
             return BoFA()
+
+    def post_to_splitwise(self, list_to_splitwise):
+        splitwise_server_url = 'http://localhost:8001'
+        response = requests.post(splitwise_server_url, json=list_to_splitwise)
 
 # class Amex:
