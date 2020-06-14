@@ -22,8 +22,8 @@ class HandleSplitwiseApiRq(http.server.BaseHTTPRequestHandler):
         request_to_splitwise = json.loads(body.decode('utf-8'))
 
         splitwise_api_utils = SplitwiseApiUtils()
-        splitwise_api_utils.get_or_request_splitwise_creds(request_to_splitwise)
 
+        splitwise_api_utils.get_or_request_splitwise_creds(request_to_splitwise)
         self.return_res()
 
     def return_res(self):

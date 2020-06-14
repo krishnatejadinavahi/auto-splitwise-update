@@ -63,8 +63,12 @@ class Api(RedisUtils):
         if card == "BoFA":
             return BoFA()
 
-    def post_to_splitwise(self, list_to_splitwise):
+    def post_to_splitwise(self, list_to_splitwise, splitwise_friend):
         splitwise_server_url = 'http://localhost:8001'
-        response = requests.post(splitwise_server_url, json=list_to_splitwise)
+        splitwise_request_object = {
+            'list_to_splitwise': list_to_splitwise,
+            'splitwise_friend': splitwise_friend
+        }
+        response = requests.post(splitwise_server_url, json=splitwise_request_object)
 
 # class Amex:
