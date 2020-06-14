@@ -22,10 +22,9 @@ class SplitwiseApiUtils(SplitwiseRedisUtils):
         self.create_group_if_not_exists()
 
         current_user_id = SplitwiseApiUtils.splitwise_obj.getCurrentUser().id
-        group_id = self.client.get(f"sw-${current_user_id}")
-
         friend_obj = self.get_friend(SplitwiseApiUtils.splitwise_obj.getFriends())
 
+        group_id = self.client.get(f"sw-${current_user_id}")
         user1 = ExpenseUser()
         user1.setId(current_user_id)
 
@@ -36,12 +35,11 @@ class SplitwiseApiUtils(SplitwiseRedisUtils):
 
     def create_expense_on_splitwise(self, group_id, user1, user2):
         for transaction in SplitwiseApiUtils.splitwise_request_object:
-            users = []
             expense = Expense()
             transaction_cost = float(transaction['amount'][1:])
             expense.setCost(transaction_cost)
             expense.setDescription(transaction['merchant'])
-            expense.details = f"Expense made on {transaction['date']} using the card {transaction['card']}"
+            expense.details = f"Expense made on {transaction['date']} using {transaction['card']}"
             expense.group_id = int(group_id.decode('utf-8'))
 
             user1.setPaidShare(transaction_cost)
@@ -49,8 +47,8 @@ class SplitwiseApiUtils(SplitwiseRedisUtils):
 
             user2.setPaidShare('0.00')
             user2.setOwedShare(transaction_cost)
-            users.append(user1)
-            users.append(user2)
+
+            users = [user1, user2]
 
             expense.setUsers(users)
 
